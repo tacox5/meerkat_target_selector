@@ -1,0 +1,28 @@
+# Database Connection Settings
+mysql:
+  drivername: mysql
+  host: localhost
+  username: root
+  password: mysql_pass
+  database: observations
+
+
+# Variable triaging
+
+# TODO: Allow user to set priority to their criteria
+triaging:
+  # Column names or combination of column names can be used for
+  item_1:
+    priority: 1
+    col: dist_c
+    order: DESC
+
+  item_2:
+    priority: 2
+    col: beam_dist
+    order: DESC
+
+
+# Assign priority sources based on source_id in table
+# TODO: Alert the user if these sources don't exist in the defined table
+priority_sources: [1234, 2345, 3456]
