@@ -317,7 +317,7 @@ class Listen(threading.Thread):
         return (2.998e8 / max_freq) / dish_size
 
     def _reformat_df_and_publish(self, tb, product_id, sub_arr_id = 1,
-                                 sensor_name = 'PLACE_HOLDER'):
+                                 sensor_name = 'targets'):
         """Reformat the table returned from target searching
 
         Parameters:
@@ -335,7 +335,7 @@ class Listen(threading.Thread):
         key = '{}:block_{}:{}'.format(product_id, sub_arr_id, sensor_name)
         write_pair_redis(self.redis_server, key, json.dumps(targ_dict))
 
-        publish(self.redis_server, 'place_holder', key)
+        publish(self.redis_server, 'bluse:///set', key)
 
 
     def pointing_coords(self, t_str):
