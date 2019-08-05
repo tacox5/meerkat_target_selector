@@ -1,4 +1,10 @@
+# Python files
+.ipynb_checkpoints
 *.pyc
+__pycache__
+
+# Mac files
+.DS_store
 
 config.yml
 

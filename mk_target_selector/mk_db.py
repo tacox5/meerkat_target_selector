@@ -122,9 +122,9 @@ class Triage(Database_Handler):
                 Else, returns False.
         """
 
-        # TODO: Use data_suspect instead
         source_tb = df.loc[:, ['source_id']]
         source_tb['duration'] = t['track_duration']
+        # TODO: Use data_suspect instead
         source_tb['time'] = datetime.now()
         source_tb['success'] = False
         source_tb['mode'] = 0

@@ -48,7 +48,7 @@ class Listen(threading.Thread):
         # Triaging Sources
         self.engine = Triage()
 
-        # TODO: replace this once a more perminent fix is found. Meant to handle
+        # TODO: replace this once a more permanent fix is found. Meant to handle
         # the "deconfigure before configuration message" error
         self.product_ids = []
 
