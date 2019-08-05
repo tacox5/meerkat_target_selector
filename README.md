@@ -4,17 +4,17 @@ One of Breakthrough Listen’s primary objectives is to conduct the most compreh
 
 ## MeerKAT Target Selector
 
+## Installation
 
+Setup the database:
 
-## Figures of Merit
+```
+python scripts/configure_db.py -u your_username
+```
 
-![fig6](plots/FoM/figure_6_emilio_w_MeerKAT.png)
+This will prompt you for a password which you will need to enter.
 
-![fom](plots/FoM/figure_5_w_meerkat.png)
-
-## Author
-
-This project is being developed by Tyler Cox, under the mentorship of Daniel Czech and Dave MacMahon, for the Berkeley SETI Research Center [internship](http://seti.berkeley.edu/Internship.html).
+You can also specify a database name in which the tables will be stored which can be added using the `-d` flag after `python scripts/configure_db.py`. Once this is set, asdf asdf asdf.
 
 ## References
 

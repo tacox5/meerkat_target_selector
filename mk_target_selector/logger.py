@@ -14,7 +14,6 @@ def set_logger(log_level=logging.DEBUG):
     logging.basicConfig(format=FORMAT)
     log = get_logger()
     log.setLevel(log_level)
-
     return log
 
 intro_message = r"""

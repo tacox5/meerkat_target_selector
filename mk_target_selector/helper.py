@@ -25,6 +25,6 @@ def add_time(time, del_t):
     except:
         logger.warning('Schedule block time could not be succesfully parsed')
         # TODO: placeholder epoch time in except block. Change!
-        obs_time = datetime.datetime.utcfromtimestamp(0)
+        obs_time = datetime.datetime.now()
 
     return obs_time

@@ -1,0 +1,6 @@
+*.pyc
+
+config.yml
+
+# Example testing messages
+test/

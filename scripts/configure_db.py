@@ -7,6 +7,8 @@ for bulk inserting data from csv file in the future.
 
 '''
 
+import os
+import yaml
 import pandas as pd
 from getpass import getpass
 from sqlalchemy import create_engine, event
@@ -66,12 +68,16 @@ def cli(prog=sys.argv[0]):
 
     main(user = args.username,
          password = password,
+         host = args.host,
          schema_name = args.database)
 
+def write_yaml(cred):
+    data = {"mysql": cred}
+    with open('config.yml', 'w') as outfile:
+        yaml.dump(data, outfile, default_flow_style=False)
 
-
-def main(user, password, schema_name):
-    cred = {'username': user, 'password': password, 'host': 'localhost',
+def main(user, password, host, schema_name):
+    cred = {'username': user, 'host': 'localhost', 'password': password,
             'drivername': 'mysql'}
 
     source_table_name = 'target_list'
@@ -79,14 +85,12 @@ def main(user, password, schema_name):
 
     url = URL(**cred)
     engine = create_engine(name_or_url = url)
-    @event.listens_for(engine, 'before_cursor_execute')
-    def receive_before_cursor_execute(conn, cursor, statement, params, context, executemany):
-        if executemany:
-            cursor.fast_executemany = True
-
-
     engine.execute('CREATE DATABASE IF NOT EXISTS {};'.format(schema_name))
     engine.execute('USE {};'.format(schema_name))
+
+    # Create config file
+    cred['database'] = schema_name
+    write_yaml(cred)
 
 
     if not engine.dialect.has_table(engine, source_table_name):
@@ -97,16 +101,15 @@ def main(user, password, schema_name):
         engine.execute('CREATE INDEX target_list_loc_idx ON \
                         {}.{} (ra, decl)'.format(schema_name, source_table_name))
         del tb
+
     else:
-        print ('Table with the name, {}, already exists. Could not \
-                create table.\n'.format(source_table_name))
+        print ('Table with the name, {}, already exists. Could not create table.\n'.format(source_table_name))
 
     if not engine.dialect.has_table(engine, obs_table_name):
         print ('Creating table: {}'.format(obs_table_name))
         Base.metadata.create_all(engine)
     else:
-        print ('Table with the name, {}, already exists. Could not \
-                create table.\n'.format(obs_table_name))
+        print ('Table with the name, {}, already exists. Could not create table.\n'.format(obs_table_name))
 
 if __name__ == '__main__':
     cli()

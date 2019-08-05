@@ -4,6 +4,7 @@ import yaml
 import time
 import threading
 import numpy as np
+from datetime import datetime
 from astropy import units as u
 from astropy.coordinates import Angle
 
@@ -44,19 +45,32 @@ class Listen(threading.Thread):
         self.p = self.redis_server.pubsub(ignore_subscribe_messages = True)
         self.p.psubscribe(chan)
 
-        # TODO: handle this in a better way
+        # Triaging Sources
         self.engine = Triage()
 
-        self.actions = {
+        # TODO: replace this once a more perminent fix is found. Meant to handle
+        # the "deconfigure before configuration message" error
+        self.product_ids = []
+
+        self.channel_actions = {
             #sensor_alerts actions
             'alerts': self._alerts,
             'sensor_alerts': self._sensor_alerts,
+        }
 
-            # alerts actions
+        self.alert_actions = {
             'deconfigure'  : self._deconfigure,
+            'configure': self._pass,
+            'conf_complete': self._pass,
+            'capture-init': self._pass,
+            'capture-start': self._pass,
+            'capture-stop': self._pass,
+            'capture-done': self._pass
+        }
 
-            # sensor actions
-            'schedule_block': self._schedule_block,
+        self.sensor_actions = {
+            'data_suspect': self._data_suspect,
+            'schedule_blocks': self._schedule_blocks,
             'processing': self._processing,
             'observation_status': self._status_update
         }
@@ -67,9 +81,28 @@ class Listen(threading.Thread):
            messages that come through redis.
         """
         for item in self.p.listen():
-            self._message_to_func(item['channel'])(item['data'])
+            self._message_to_func(item['channel'], self.channel_actions)(item['data'])
 
-    def _deconfigure(self, item, sensor_name = 'processing'):
+
+
+    """
+
+    Alert Functions
+
+    """
+
+    def _alerts(self, message):
+        """Response to alert channel
+        """
+        # TODO: do something with the product_id
+        sensor, product_id = self._parse_sensor_name(message)
+        self._message_to_func(sensor, self.alert_actions)(product_id)
+
+    def _pass(self, item):
+        # Temporary function to handle alert messages
+        return 0
+
+    def _deconfigure(self, item):
         """Response to deconfigure message from the redis alerts channel
 
         Parameters:
@@ -80,21 +113,97 @@ class Listen(threading.Thread):
             None
         """
         # TODO: think of a way to handle multiple sub-array (product_ids) at one time
-
         sensor_list = ['processing', 'targets']
 
         for sensor in sensor_list:
-
-            key_glob = '{}:*:{}'.format(self.product_id, sensor)
+            # TODO: Fix this so that if a deconfigure message comes through before
+            # a configure message, the target selector won't shutdown
+            key_glob = '{}:*:{}'.format(item, sensor)
 
             for k in self.redis_server.scan_iter(key_glob):
-                logger.info('Removing key: {}'.format(k))
+                logger.info('Deconfigure message. Removing key: {}'.format(k))
                 delete_key(self.redis_server, k)
 
 
     """
 
-    Interal Methods
+    Sensor Alerts Functions
+
+    """
+
+    def _sensor_alerts(self, message):
+        """Response to sensor_alerts channel. Runs a function based on the input
+        message
+
+        Parameters:
+            message: (str)
+                Message received from listening to the sensor_alerts channel
+
+        Returns:
+            None
+        """
+        # TODO: do something with the product_id
+        product_id, sensor = self._parse_sensor_name(message)
+
+        # TODO: SUPER HACKY CHANGE THIS AS SOON AS POSSIBLE
+        if product_id.endswith('_data_suspect'):
+            return
+
+        if product_id not in self.product_ids:
+            self.product_ids.append(product_id)
+
+        self._message_to_func(sensor, self.sensor_actions)(message)
+
+    def _schedule_blocks(self, key):
+        """Block that responds to schedule block updates. Searches for targets
+           and publishes the information to the processing channel
+
+           Parameters:
+                msg: (dict)
+                    Redis channel message received from listening to a channel
+
+            Returns:
+                None
+        """
+        message = get_redis_key(self.redis_server, key)
+        product_id = key.split(':')[0]
+        schedule_block = self.load_schedule_block(message)
+
+        if isinstance(schedule_block, list):
+            if isinstance(schedule_block[0], list):
+                target_pointing = schedule_block[0]
+            elif isinstance(schedule_block[0], dict):
+                target_pointing = schedule_block
+
+        if isinstance(schedule_block, dict):
+            target_pointing = schedule_block['targets']
+
+        start = time.time()
+        # TODO: Fix this as soon as possible!!!
+        start_time = datetime.now()
+        for i, t in enumerate(target_pointing):
+            targets = self.engine.select_targets(*self.pointing_coords(t),
+                                                  beam_rad = np.deg2rad(0.5))
+
+            # TODO: replace with data_suspect, more accurate
+            self.engine.add_sources_to_db(targets, t, start_time,
+                                          table = 'observation_status')
+
+            self._reformat_df_and_publish(targets.loc[:, ['ra', 'decl']],
+                                          product_id = product_id, sub_arr_id = i)
+
+        logger.info('{} pointings processed in {} seconds'.format(len(target_pointing),
+                                                             time.time() - start))
+
+    def _data_suspect(self, msg):
+        # TODO: use this function to time observations
+        return time.time()
+
+
+
+    """
+
+    Internal Methods
 
     """
 
@@ -107,7 +216,7 @@ class Listen(threading.Thread):
         return yaml.safe_load(message)
 
 
-    def _get_sensor_value(product_id, sensor_name):
+    def _get_sensor_value(self, product_id, sensor_name):
         """Returns the value for a given sensor and product id number
 
         Parameters:
@@ -124,31 +233,7 @@ class Listen(threading.Thread):
         value = get_redis_key(self.redis_server, key)
         return value
 
-    def _sensor_alerts(self, message):
-        """Response to sensor_alerts channel. Runs a function based on the input
-        message
-
-        Parameters:
-            message: (str)
-                Message received from listening to the sensor_alerts channel
-
-        Returns:
-            None
-        """
-        # TODO: do something with the product_id
-        self.product_id, sensor = self._parse_sensor_name(message)
-        self._message_to_func(sensor)(message)
-
-    def _alerts(self, message):
-        """Response to alert channel
-
-        # TODO: merge this with sensor_alerts
-        """
-        # TODO: do something with the product_id
-        sensor, product_id = self._parse_sensor_name(message)
-        self._message_to_func(sensor)(product_id)
-
-    def _message_to_func(self, channel):
+    def _message_to_func(self, channel, action):
         """Function that selects a function to run based on the channel entered
 
         Parameters:
@@ -159,7 +244,7 @@ class Listen(threading.Thread):
             Function attached to a particular sensor_name
 
         """
-        return self.actions.get(channel, self._other)
+        return action.get(channel, self._other)
 
     def _other(self, channel):
         """Function that handles unrecognized requests from redis server
@@ -171,7 +256,7 @@ class Listen(threading.Thread):
         Returns:
             None
         """
-        logger.warning('Unrecognized channel style: {}'.format(channel))
+        logger.info('Unrecognized channel style: {}'.format(channel))
 
     def _status_update(self, msg):
         """Function to test the status_update from the processing nodes.
@@ -231,41 +316,8 @@ class Listen(threading.Thread):
         max_freq = get_redis_key(self.redis_server, key)
         return (2.998e8 / max_freq) / dish_size
 
-    def _schedule_block(self, key):
-        """Block that responds to schedule block updates. Searches for targets
-           and publishes the information to the processing channel
-
-           Parameters:
-                msg: (dict)
-                    Redis channel message received from listening to a channel
-
-            Returns:
-                None
-        """
-        message = get_redis_key(self.redis_server, key)
-        product_id = key.split(':')[0]
-        schedule_block = self.load_schedule_block(message)
-        target_pointing = schedule_block['targets']
-        start_time = schedule_block['actual_start_time']
-        start = time.time()
-
-        for i, t in enumerate(target_pointing):
-            targs = self.engine.select_targets(*self._parse_pointing(t),
-                                                  beam_rad = np.deg2rad(0.5))
-
-            self.engine.add_sources_to_db(targs, t, start_time,
-                                          table = 'observation_status')
-
-            self._reformat_df_and_publish(targs.loc[:, ['ra', 'decl', 'priority']],
-                                          product_id = product_id, sub_arr_id = i,
-                                          sensor_name = 'processing')
-
-        logger.info('{} pointings processed in {} seconds'.format(len(target_pointing),
-                                                             time.time() - start))
-
-
     def _reformat_df_and_publish(self, tb, product_id, sub_arr_id = 1,
-                                 sensor_name = 'targets'):
+                                 sensor_name = 'PLACE_HOLDER'):
         """Reformat the table returned from target searching
 
         Parameters:
@@ -282,10 +334,11 @@ class Listen(threading.Thread):
         targ_dict = tb.to_dict('list')
         key = '{}:block_{}:{}'.format(product_id, sub_arr_id, sensor_name)
         write_pair_redis(self.redis_server, key, json.dumps(targ_dict))
-        publish(self.redis_server, 'alerts', key)
+
+        publish(self.redis_server, 'place_holder', key)
 
 
-    def _parse_pointing(self, t_str):
+    def pointing_coords(self, t_str):
         """Function used to clean up run loop and parse pointing information
 
         Parameters:
@@ -315,11 +368,18 @@ class Listen(threading.Thread):
                 Value of the particular sensor
         """
         try:
-            sensor, value = message.split(':', 1)
-            return sensor, value
+            if len(message.split(':')) == 3:
+                # TODO: do something with this value
+                product_id, sensor, value = message.split(':')
+            if len(message.split(':')) == 2:
+                product_id, sensor = message.split(':')
+
+            return product_id, sensor
 
         except:
-            logger.warning('Unrecognized message style: {}')
+            logger.warning('Parsing sensor name failed. Unrecognized message \
+                            style: {}'.format(message))
+            # TODO: Add something that makes more sense
             return False
 
     def _found_aliens():

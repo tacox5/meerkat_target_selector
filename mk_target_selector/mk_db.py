@@ -2,6 +2,7 @@ import yaml
 import numpy as np
 import pandas as pd
 from dateutil import parser
+from datetime import datetime
 from sqlalchemy import create_engine
 from sqlalchemy.engine.url import URL
 
@@ -25,7 +26,7 @@ class Database_Handler(object):
 
     # TODO: handle inclusion of other databases in the
     """
-    def __init__(self, config_file = 'config.yaml'):
+    def __init__(self, config_file = 'config.yml'):
         """
         __init__ function for the DataBase_Handler class
 
@@ -37,7 +38,7 @@ class Database_Handler(object):
             None
         """
         self.cfg = self.configure_settings(config_file)
-        self.priority_sources = np.array(self.cfg['priority_sources'])
+        #self.priority_sources = np.array(self.cfg['priority_sources'])
         self.conn = self.connect_to_db(self.cfg['mysql'])
 
 
@@ -97,7 +98,7 @@ class Database_Handler(object):
 
 
 class Triage(Database_Handler):
-    def __init__(self, config_file = 'config.yaml'):
+    def __init__(self, config_file = 'config.yml'):
         super(Triage, self).__init__(config_file)
 
     def add_sources_to_db(self, df, t, start_time, table = 'observation_status'):
@@ -121,10 +122,10 @@ class Triage(Database_Handler):
                 Else, returns False.
         """
 
+        # TODO: Use data_suspect instead
         source_tb = df.loc[:, ['source_id']]
         source_tb['duration'] = t['track_duration']
-        source_tb['time'] = str(add_time(start_time,
-                                            t['track_start_offset'])).split('+')[0]
+        source_tb['time'] = datetime.now()
         source_tb['success'] = False
         source_tb['mode'] = 0
         source_tb['file_id'] = 0
@@ -241,9 +242,8 @@ class Triage(Database_Handler):
         # TODO replace these with sqlalchemy queries
         source_ids = pd.read_sql(query, con = self.conn)
         priority[tb['source_id'].isin(source_ids['source_id'])] += 1
-        priority[tb['source_id'].isin(self.priority_sources)] = 0
+        #priority[tb['source_id'].isin(self.priority_sources)] = 0
         tb['priority'] = priority
-
         return tb.sort_values('priority')
 
     def select_targets(self, c_ra, c_dec, beam_rad, table = 'target_list',
