@@ -7,13 +7,10 @@ from sqlalchemy import create_engine
 from sqlalchemy.engine.url import URL
 
 try:
-    from .helper import add_time
     from .logger import log as logger
 
 except ImportError:
-    from helper import add_time
     from logger import log as logger
-    from credentials import cred
 
 class Database_Handler(object):
     """
@@ -23,8 +20,6 @@ class Database_Handler(object):
     Examples:
         >>> db = Database_Handler()
         >>> db.select_targets(c_ra, c_dec, beam_rad)
-
-    # TODO: handle inclusion of other databases in the
     """
     def __init__(self, config_file = 'config.yml'):
         """
@@ -98,14 +93,27 @@ class Database_Handler(object):
 
 
 class Triage(Database_Handler):
+    """
+
+    ADD IN DOCUMENTATION
+
+    Examples:
+        >>> conn = Triage()
+        >>> conn.select_targets(ra, dec, beam_rad)
+
+    When start() is called, a loop is started that subscribes to the "alerts" and
+    "sensor_alerts" channels on the Redis server. Depending on the which message
+    that passes over which channel, various processes are run:
+    """
     def __init__(self, config_file = 'config.yml'):
         super(Triage, self).__init__(config_file)
 
-    def add_sources_to_db(self, df, t, start_time, table = 'observation_status'):
+    def add_sources_to_db(self, df, start_time, end_time,
+                          table = 'observation_status'):
         """
         Adds a pandas DataFrame to a specified table
 
-        Returns:
+        Parameters:
             df: (pandas.DataFrame)
                 DataFrame containing infrormation on the sources within the field
                 of views
@@ -123,9 +131,8 @@ class Triage(Database_Handler):
         """
 
         source_tb = df.loc[:, ['source_id']]
-        source_tb['duration'] = t['track_duration']
-        # TODO: Use data_suspect instead
-        source_tb['time'] = datetime.now()
+        source_tb['duration'] = (end_time - start_time).total_seconds()
+        source_tb['time'] = start_time
         source_tb['success'] = False
         source_tb['mode'] = 0
         source_tb['file_id'] = 0
