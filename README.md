@@ -10,6 +10,8 @@ One of Breakthrough Listen’s primary objectives is to conduct the most compreh
 
 [Install redis](https://redis.io/topics/quickstart)
 
+### Target Selector
+
 ```
 git clone https://github.com/UCBerkeleySETI/mk_target_selector
 ```
@@ -23,6 +25,8 @@ python setup.py install
 ```
 
 ### MySQL Database:
+
+[MySQL Server](https://dev.mysql.com/downloads/installer/)
 
 Setup the database:
 
