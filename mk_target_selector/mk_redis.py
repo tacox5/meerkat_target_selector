@@ -93,6 +93,7 @@ class Listen(threading.Thread):
             'data_suspect': self._data_suspect,
             'schedule_blocks': self._pass,
             'processing': self._processing,
+            'pool_resources': self._pool_resources,
             'observation_status': self._status_update,
             'target': self._target
         }
@@ -200,6 +201,9 @@ class Listen(threading.Thread):
         # antenna data_suspect
         if product_id.endswith('_data_suspect'):
             return
+
+        if sensor.endswith('pool_resources'):
+            sensor = 'pool_resources'
 
         self._message_to_func(sensor, self.sensor_actions)(message)
 
