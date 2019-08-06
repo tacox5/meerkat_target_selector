@@ -91,11 +91,10 @@ class Listen(threading.Thread):
 
         self.sensor_actions = {
             'data_suspect': self._data_suspect,
-            'schedule_blocks': self._schedule_blocks,
+            'schedule_blocks': self._pass,
             'processing': self._processing,
             'observation_status': self._status_update,
-            'ra_requested': self._pos_requested,
-            'dec_requested': self._pos_requested
+            'target': self._target
         }
 
     def run(self):
@@ -142,7 +141,8 @@ class Listen(threading.Thread):
                 product_id for this particular subarray
 
         """
-        self.sensor_info[product_id] = {'data_suspect': True}
+        self.sensor_info[product_id] = {'data_suspect': True, 'pointings': 0,
+                                        'targets': []}
 
     def _deconfigure(self, product_id):
         """Response to deconfigure message from the redis alerts channel
@@ -203,31 +203,34 @@ class Listen(threading.Thread):
 
         self._message_to_func(sensor, self.sensor_actions)(message)
 
-        def _pos_requested(self, message):
-            """Response to message from the Sensor Alerts channel. If both the right
-            ascension and declination are stored, then the database is queried
-            for
+    def _target(self, message):
+        """Response to message from the Sensor Alerts channel. If both the right
+        ascension and declination are stored, then the database is queried
+        for
 
-            Parameters:
-                message: (str)
-                    Message passed over the sensor alerts channel
+        Parameters:
+            message: (str)
+                Message passed over the sensor alerts channel
 
-            Returns:
-                None
-            """
-            product_id, sensor, value = message.split(:, 2)
-            self.sensor_info[product_id][sensor] = value
+        Returns:
+            None
+        """
+        product_id, sensor, value = message.split(:, 2)
+        value = value.split(':', 2)[-1]
 
-            # If both ra and dec are stored in the dictionary, run the function
-            try:
-                c_ra = Angle(self.sensor_info[product_id]['ra_requested'], unit=u.hourangle).rad
-                c_dec = Angle(self.sensor_info[product_id]['dec_requested'], unit=u.deg).rad
-                targets = self.engine.select_targets(c_ra, c_dec, beam_rad = np.deg2rad(0.5))
-                self.sensor_info[product_id]['targets'] = targets
-                self._publish_targets(targets, product_id = product_id)
+        if value == 'unavailable':
+            return
 
-            except KeyError:
-                pass
+        else:
+            coords = SkyCoord(' '.join(value.split(', ')[-2:]), unit=(u.hourangle, u.deg))
+            p_num = self.sensor_info[product_id][pointings]
+            self.sensor_info[product_id][sensor] = coords
+            targets = self.engine.select_targets(coords.ra.rad, coords.dec.rad,
+                                                 beam_rad = np.deg2rad(0.5))
+            self.sensor_info[product_id]['pointings'] += 1
+            self.sensor_info[product_id]['targets'].append(targets)
+            self._publish_targets(targets, product_id = product_id,
+                                  sub_arr_id = p_num)
 
     def _schedule_blocks(self, key):
         """Block that responds to schedule block updates. Searches for targets
