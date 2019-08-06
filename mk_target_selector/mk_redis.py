@@ -220,7 +220,7 @@ class Listen(threading.Thread):
             None
         """
         product_id, sensor, value = message.split(':', 2)
-    
+
         if value == 'unavailable':
             return
 
@@ -480,7 +480,7 @@ class Listen(threading.Thread):
                 product_id, sensor = message.split(':')
 
             else:
-                product_id, sensor = message.split(':', 2)
+                product_id, sensor = message.split(':', 2)[:2]
 
             return product_id, sensor
 
