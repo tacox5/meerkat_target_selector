@@ -220,8 +220,7 @@ class Listen(threading.Thread):
             None
         """
         product_id, sensor, value = message.split(':', 2)
-        value = value.split(':', 2)[-1]
-
+    
         if value == 'unavailable':
             return
 
@@ -476,8 +475,12 @@ class Listen(threading.Thread):
             if len(message.split(':')) == 3:
                 # TODO: do something with this value
                 product_id, sensor, value = message.split(':')
-            if len(message.split(':')) == 2:
+
+            elif len(message.split(':')) == 2:
                 product_id, sensor = message.split(':')
+
+            else:
+                product_id, sensor = message.split(':', 2)
 
             return product_id, sensor
 
