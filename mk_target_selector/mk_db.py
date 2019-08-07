@@ -108,8 +108,8 @@ class Triage(Database_Handler):
     def __init__(self, config_file = 'config.yml'):
         super(Triage, self).__init__(config_file)
 
-    def add_sources_to_db(self, df, start_time, end_time,
-                          table = 'observation_status'):
+    def add_sources_to_db(self, df, start_time, end_time, proxies, antennas,
+                          file_id, bands, mode = 0, table = 'observation_status'):
         """
         Adds a pandas DataFrame to a specified table
 
@@ -134,11 +134,11 @@ class Triage(Database_Handler):
         source_tb['duration'] = (end_time - start_time).total_seconds()
         source_tb['time'] = start_time
         source_tb['success'] = False
-        source_tb['mode'] = 0
-        source_tb['file_id'] = 0
-        source_tb['proxies'] = 'hello'
-        source_tb['bands'] = 'hello'
-        source_tb['antennas'] = 'hello'
+        source_tb['mode'] = mode
+        source_tb['file_id'] = file_id
+        source_tb['proxies'] = proxies
+        source_tb['bands'] = bands
+        source_tb['antennas'] = antennas
 
         try:
             source_tb.to_sql(table, self.conn, if_exists='append', index=False)

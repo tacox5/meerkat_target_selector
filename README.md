@@ -26,7 +26,7 @@ python setup.py install
 
 ### MySQL Database:
 
-[MySQL Server](https://dev.mysql.com/downloads/installer/)
+[MySQL Server](https://dev.mysql.com/downloads/mysql/)
 
 Setup the database:
 

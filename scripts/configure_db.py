@@ -14,29 +14,30 @@ from getpass import getpass
 from sqlalchemy import create_engine, event
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.types import (VARCHAR, BOOLEAN, BIGINT, FLOAT,
-                              TIMESTAMP, INT, BIGINT)
+                              TIMESTAMP, INT, BIGINT, Text)
 from sqlalchemy import Index, Column
 from sqlalchemy.engine.url import URL
 import sys
 from argparse import (
     ArgumentParser,
-    ArgumentDefaultsHelpFormatter)
+    ArgumentDefaultsHelpFormatter
+)
 
 data_link = 'https://www.dropbox.com/s/yklypkckc6m2xx1/1_million_sample_complete.csv?dl=1'
 
 Base = declarative_base()
 class Observation(Base):
-    """Observation table
+    """Observation table data schema. Stores information on the status of the
+       observation.
     """
     __tablename__ = 'observation_status'
     source_id = Column(BIGINT, primary_key = True)
-    antennas = Column(VARCHAR(45))
+    antennas = Column(Text)
+    proxies = Column(Text)
     bands = Column(VARCHAR(45))
     duration = Column(FLOAT)
-    file_id = Column(INT)
+    file_id = Column(VARCHAR(45))
     mode = Column(INT)
-    proxies = Column(VARCHAR(45))
-    success = Column(BOOLEAN)
     time = Column(TIMESTAMP)
 
 
@@ -71,9 +72,14 @@ def cli(prog=sys.argv[0]):
          host = args.host,
          schema_name = args.database)
 
-def write_yaml(cred):
+def write_yaml(cred, filename = 'config.yml'):
     data = {"mysql": cred}
-    with open('config.yml', 'w') as outfile:
+
+    if os.path.basename(os.getcwd()) == 'scripts':
+        path = os.path.split(os.getcwd())[0]
+        filename = os.path.join(path, filename)
+
+    with open(filename, 'w') as outfile:
         yaml.dump(data, outfile, default_flow_style=False)
 
 def main(user, password, host, schema_name):
@@ -82,7 +88,6 @@ def main(user, password, host, schema_name):
 
     source_table_name = 'target_list'
     obs_table_name = 'observation_status'
-
     url = URL(**cred)
     engine = create_engine(name_or_url = url)
     engine.execute('CREATE DATABASE IF NOT EXISTS {};'.format(schema_name))
@@ -103,13 +108,13 @@ def main(user, password, host, schema_name):
         del tb
 
     else:
-        print ('Table with the name, {}, already exists. Could not create table.\n'.format(source_table_name))
+        print ('Table with the name, {}, already exists. Could not create table.'.format(source_table_name))
 
     if not engine.dialect.has_table(engine, obs_table_name):
         print ('Creating table: {}'.format(obs_table_name))
         Base.metadata.create_all(engine)
     else:
-        print ('Table with the name, {}, already exists. Could not create table.\n'.format(obs_table_name))
+        print ('Table with the name, {}, already exists. Could not create table.'.format(obs_table_name))
 
 if __name__ == '__main__':
     cli()

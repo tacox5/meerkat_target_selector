@@ -6,7 +6,7 @@ import threading
 import numpy as np
 from datetime import datetime
 from astropy import units as u
-from astropy.coordinates import Angle
+from astropy.coordinates import Angle, SkyCoord
 
 try:
     from .logger import log as logger
@@ -69,11 +69,8 @@ class Listen(threading.Thread):
         # Database connection and triaging
         self.engine = Triage()
 
-        # TODO: replace this once a more permanent fix is found. Meant to handle
-        # the "deconfigure before configuration message" error
         self.sensor_info = {}
 
-        #
         self.channel_actions = {
             'alerts': self._alerts,
             'sensor_alerts': self._sensor_alerts,
@@ -92,7 +89,6 @@ class Listen(threading.Thread):
         self.sensor_actions = {
             'data_suspect': self._data_suspect,
             'schedule_blocks': self._pass,
-            'processing': self._processing,
             'pool_resources': self._pool_resources,
             'observation_status': self._status_update,
             'target': self._target
@@ -155,26 +151,19 @@ class Listen(threading.Thread):
         Returns:
             None
         """
-        # TODO: think of a way to handle multiple sub-array (product_ids) at one time
         sensor_list = ['processing', 'targets']
 
         for sensor in sensor_list:
-            # TODO: Fix this so that if a deconfigure message comes through before
-            # a configure message, the target selector won't shutdown
             key_glob = '{}:*:{}'.format(product_id, sensor)
             for k in self.redis_server.scan_iter(key_glob):
                 logger.info('Deconfigure message. Removing key: {}'.format(k))
                 delete_key(self.redis_server, k)
 
-
-        print (self.sensor_info[product_id])
         # TODO: update the database with information inside the sensor_info
         try:
             del self.sensor_info[product_id]
         except KeyError:
             logger.info('Deconfigure message received before configure message')
-
-
 
 
     """
@@ -194,16 +183,13 @@ class Listen(threading.Thread):
         Returns:
             None
         """
-        # TODO: do something with the product_id
         product_id, sensor = self._parse_sensor_name(message)
-
-        # TODO: SUPER HACKY CHANGE THIS AS SOON AS POSSIBLE, handles individual
-        # antenna data_suspect
-        if product_id.endswith('_data_suspect'):
-            return
 
         if sensor.endswith('pool_resources'):
             sensor = 'pool_resources'
+
+        if product_id not in self.sensor_info.keys():
+            self._configure(product_id)
 
         self._message_to_func(sensor, self.sensor_actions)(message)
 
@@ -226,7 +212,7 @@ class Listen(threading.Thread):
 
         else:
             coords = SkyCoord(' '.join(value.split(', ')[-2:]), unit=(u.hourangle, u.deg))
-            p_num = self.sensor_info[product_id][pointings]
+            p_num = self.sensor_info[product_id]['pointings']
             self.sensor_info[product_id][sensor] = coords
             targets = self.engine.select_targets(coords.ra.rad, coords.dec.rad,
                                                  beam_rad = np.deg2rad(0.5))
@@ -260,13 +246,9 @@ class Listen(threading.Thread):
             target_pointing = schedule_block['targets']
 
         start = time.time()
-        # TODO: Fix this as soon as possible!!!
-        start_time = datetime.now()
         for i, t in enumerate(target_pointing):
             targets = self.engine.select_targets(*self.pointing_coords(t),
                                                   beam_rad = np.deg2rad(0.5))
-
-            # TODO: replace with data_suspect, more accurate
             self.sensor_info[product_id]['pointing_{}'.format(i)] = targets
             self._publish_targets(targets, product_id = product_id, sub_arr_id = i)
 
@@ -289,6 +271,7 @@ class Listen(threading.Thread):
         elif not self.sensor_info[product_id]['data_suspect'] and value:
             self.sensor_info[product_id]['data_suspect'] = True
             self.sensor_info[product_id]['end_time'] = datetime.now()
+            store_metadata(product_id)
 
     def _pool_resources(self, message):
         """Response to a pool_resources message from the sensor_alerts channel.
@@ -315,6 +298,13 @@ class Listen(threading.Thread):
     def load_schedule_block(self, message):
         """Reformats schedule block messages and reformats them into dictionary
            format
+
+        Parameters:
+            message: (str)
+                asdf
+
+        Returns:
+            None
         """
         message = message.replace('"[', '[')
         message = message.replace(']"', ']')
@@ -369,25 +359,13 @@ class Listen(threading.Thread):
         Parameters:
             msg: (str)
                 string formatted like a
+
+        Returns:
+            None
         """
         status_msg = self.load_schedule_block(msg)
         if status_msg['success']:
             self.engine.update_obs_status(**status_msg)
-
-    def _processing(self, msg):
-        """
-        Function to test the processing message. Publishes a success/failure
-        message to observation_status channel.
-        """
-        sources = self.load_schedule_block(msg)
-        for id in sources['source_id']:
-            success = np.random.choice([1, 0], p = [.4,.6])
-            message = {
-                'source_id': id, 'success': success,
-                'obs_start_time': sources['obs_start_time']
-            }
-            publish(self.redis_server, 'observation_status', json.dumps(message))
-        logger.info('Sources in the current block published to processing')
 
     def _unsubscribe(self, channels = None):
         """Unsubscribe from the redis server
@@ -395,6 +373,9 @@ class Listen(threading.Thread):
         Parameters:
             channels: (str, list)
                 List of channels you wish to unsubscribe to
+
+        Returns:
+            None
         """
         if channels is None:
             self.p.unsubscribe()
@@ -403,17 +384,38 @@ class Listen(threading.Thread):
 
         logger.info('Unsubscribed from channel(s)')
 
+    def store_metadata(self, product_id):
+        """Stores observation metadata in database.
+        """
+        pool_resources = self.sensor_info[product_id]['pool_resources']
+
+        antennas = ','.join(re.findall('m\d{3}', pool_resources))
+        proxies = ','.join(re.findall('[a-z A-Z]+_\d', pool_resources))
+        start = self.sensor_info[product_id]['start_time']
+        end = self.sensor_info[product_id]['end_time']
+
+        # TODO: Change this to handle specific pointing in subarray
+        targets = self.sensor_info[product_id]['targets'][0]
+
+        # TODO: query frequency band sensor
+        bands = 'L BAND'
+
+        # TODO: ask Daniel/Dave about unique file-id
+        file_id = 'filler_file_id'
+        self.engine.add_sources_to_db(targets, start, end, proxies, antennas,
+                                      file_id, bands)
+
     def _beam_radius(self, product_id, dish_size = 13.5):
         """Returns the beam radius based on the frequency band used in the
            observation
 
-           Parameters:
-                product_id: (str)
-                    product ID for the given sub-array
+       Parameters:
+            product_id: (str)
+                product ID for the given sub-array
 
-            Returns:
-                beam_rad: (float)
-                    Radius of the beam in radians
+        Returns:
+            beam_rad: (float)
+                Radius of the beam in radians
         """
         # TODO: change this to the real name
         sensor_name = 'max_freq'
@@ -473,8 +475,7 @@ class Listen(threading.Thread):
         """
         try:
             if len(message.split(':')) == 3:
-                # TODO: do something with this value
-                product_id, sensor, value = message.split(':')
+                product_id, sensor, _ = message.split(':')
 
             elif len(message.split(':')) == 2:
                 product_id, sensor = message.split(':')
@@ -485,12 +486,11 @@ class Listen(threading.Thread):
             return product_id, sensor
 
         except:
-            logger.warning('Parsing sensor name failed. Unrecognized message \
-                            style: {}'.format(message))
-            # TODO: Add something that makes more sense
+            logger.warning('Parsing sensor name failed. Unrecognized message ' \
+                           'style: {}'.format(message))
             return False
 
-    def _found_aliens():
+    def _found_aliens(self):
         """You found aliens! Alerting slack
 
         Parameters:
@@ -508,6 +508,15 @@ class Listen(threading.Thread):
 
 
 def str_to_bool(value):
+    """Returns a boolean value corresponding to
+
+    Parameters:
+        value: (str)
+            String with
+
+    Returns:
+        boolean
+    """
     if value == 'True':
         return True
     elif value == 'False':
