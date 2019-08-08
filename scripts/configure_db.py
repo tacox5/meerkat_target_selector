@@ -112,10 +112,10 @@ def main(user, password, host, schema_name):
 
     if not engine.dialect.has_table(engine, obs_table_name):
         print ('Creating table: {}'.format(obs_table_name))
-        engine.execute('DROP TABLE {}.{}'.format(schema_name, source_table_name)
         Base.metadata.create_all(engine)
     else:
-        print ('Table with the name, {}, already exists. Could not create table.'.format(obs_table_name))
+        engine.execute('DROP TABLE {}.{}'.format(schema_name, obs_table_name))
+        Base.metadata.create_all(engine)
 
 if __name__ == '__main__':
     cli()
