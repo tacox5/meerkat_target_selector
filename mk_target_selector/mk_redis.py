@@ -1,4 +1,4 @@
-import sys
+import re
 import json
 import yaml
 import time
@@ -139,7 +139,7 @@ class Listen(threading.Thread):
 
         """
         self.sensor_info[product_id] = {'data_suspect': True, 'pointings': 0,
-                                        'targets': []}
+                                        'targets': [], 'pool_resources': ''}
 
     def _deconfigure(self, product_id):
         """Response to deconfigure message from the redis alerts channel
@@ -271,7 +271,7 @@ class Listen(threading.Thread):
         elif not self.sensor_info[product_id]['data_suspect'] and value:
             self.sensor_info[product_id]['data_suspect'] = True
             self.sensor_info[product_id]['end_time'] = datetime.now()
-            store_metadata(product_id)
+            self.store_metadata(product_id)
 
     def _pool_resources(self, message):
         """Response to a pool_resources message from the sensor_alerts channel.
@@ -286,7 +286,7 @@ class Listen(threading.Thread):
         """
         product_id, _ = message.split(':')
         value = get_redis_key(self.redis_server, message)
-        self.sensor_info[product]['pool_resources'] = value
+        self.sensor_info[product_id]['pool_resources'] = value
 
 
     """
@@ -442,6 +442,7 @@ class Listen(threading.Thread):
         key = '{}:pointing_{}:{}'.format(product_id, sub_arr_id, sensor_name)
         write_pair_redis(self.redis_server, key, json.dumps(targ_dict))
         publish(self.redis_server, channel, key)
+        logger.info('Targets published to {}'.format(channel))
 
 
     def pointing_coords(self, t_str):

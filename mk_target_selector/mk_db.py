@@ -133,7 +133,6 @@ class Triage(Database_Handler):
         source_tb = df.loc[:, ['source_id']]
         source_tb['duration'] = (end_time - start_time).total_seconds()
         source_tb['time'] = start_time
-        source_tb['success'] = False
         source_tb['mode'] = mode
         source_tb['file_id'] = file_id
         source_tb['proxies'] = proxies

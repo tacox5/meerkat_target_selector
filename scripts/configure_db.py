@@ -31,7 +31,8 @@ class Observation(Base):
        observation.
     """
     __tablename__ = 'observation_status'
-    source_id = Column(BIGINT, primary_key = True)
+    rowid = Column(INT, primary_key = True)
+    source_id = Column(BIGINT)
     antennas = Column(Text)
     proxies = Column(Text)
     bands = Column(VARCHAR(45))
