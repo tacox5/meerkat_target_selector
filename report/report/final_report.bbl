@@ -1,0 +1,51 @@
+\begin{thebibliography}{}
+\expandafter\ifx\csname natexlab\endcsname\relax\def\natexlab#1{#1}\fi
+\providecommand{\url}[1]{\href{#1}{#1}}
+
+\bibitem[{Enriquez {et~al.}(2017)Enriquez, Siemion, Foster, Gajjar, Hellbourg,
+  Hickish, Isaacson, Price, Croft, DeBoer, Lebofsky, MacMahon, \&
+  Werthimer}]{enriquez_breakthrough_2017}
+Enriquez, J.~E., Siemion, A., Foster, G., {et~al.} 2017, The Astrophysical
+  Journal, 849, 104, arXiv: 1709.03491.
+\newblock \url{http://arxiv.org/abs/1709.03491}
+
+\bibitem[{Gajjar {et~al.}(2019)Gajjar, Siemion, Croft, Brzycki, Burgay,
+  Carozzi, Concu, Czech, DeBoer, DeMarines, Drew, Enriquez, Fawcett, Gallagher,
+  Gerret, Gizani, Hellbourg, Holder, Isaacson, Kudale, Lacki, Lebofsky, Li,
+  MacMahon, McCauley, Melis, Molinari, Murphy, Perrodin, Pilia, Price, Webb,
+  Werthimer, Williams, Worden, Zarka, \& Zhang}]{gajjar_breakthrough_2019}
+Gajjar, V., Siemion, A., Croft, S., {et~al.} 2019, arXiv:1907.05519 [astro-ph,
+  physics:physics], arXiv: 1907.05519.
+\newblock \url{http://arxiv.org/abs/1907.05519}
+
+\bibitem[{Holwerda {et~al.}(2011)Holwerda, Blyth, Baker, \&
+  team}]{holwerda_looking_2011}
+Holwerda, B.~W., Blyth, S.-L., Baker, A.~J., \& team, t.~L. 2011, Proceedings
+  of the International Astronomical Union, 7, 496, arXiv: 1109.5605.
+\newblock \url{http://arxiv.org/abs/1109.5605}
+
+\bibitem[{Lebofsky {et~al.}(2019)Lebofsky, Croft, Siemion, Price, Enriquez,
+  Isaacson, MacMahon, Anderson, Brzycki, Cobb, Czech, DeBoer, DeMarines, Drew,
+  Foster, Gajjar, Gizani, Hellbourg, Korpela, Lacki, Sheikh, Werthimer, Worden,
+  Yu, \& Zhang}]{lebofsky_breakthrough_2019}
+Lebofsky, M., Croft, S., Siemion, A. P.~V., {et~al.} 2019, arXiv:1906.07391
+  [astro-ph], arXiv: 1906.07391.
+\newblock \url{http://arxiv.org/abs/1906.07391}
+
+\bibitem[{Price {et~al.}(2019)Price, Enriquez, Brzycki, Croft, Czech, DeBoer,
+  DeMarines, Foster, Gajjar, Gizani, Hellbourg, Isaacson, Lacki, Lebofsky,
+  MacMahon, de~Pater, Siemion, Werthimer, Green, Kaczmarek, Maddalena, Mader,
+  Drew, \& Worden}]{price_breakthrough_2019}
+Price, D.~C., Enriquez, J.~E., Brzycki, B., {et~al.} 2019, arXiv:1906.07750
+  [astro-ph], arXiv: 1906.07750.
+\newblock \url{http://arxiv.org/abs/1906.07750}
+
+\bibitem[{Siemion {et~al.}(2014)Siemion, Benford, Cheng-Jin, Chennamangalam,
+  Cordes, DeBoer, Falcke, Garrett, Garrington, Gurvits, Hoare, Korpela, Lazio,
+  Messerschmitt, Morrison, O'Brien, Paragi, Penny, Spitler, Tarter, \&
+  Werthimer}]{siemion_searching_2014}
+Siemion, A. P.~V., Benford, J., Cheng-Jin, J., {et~al.} 2014, arXiv:1412.4867
+  [astro-ph], arXiv: 1412.4867.
+\newblock \url{http://arxiv.org/abs/1412.4867}
+
+\end{thebibliography}
