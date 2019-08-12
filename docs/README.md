@@ -12,54 +12,8 @@ This repository is for the `KATCP Server` and `Katportal Client` modules of the 
 * etc...
 
 ###  Diagram of Breakthrough Listen To-Be-Built Software Stack at MeerKAT
-```
-        +----------+
-        |          |
-        |  KATCP   | Requests containing metadata
-        |  Server  | <------------------------+
-        |          |                          |
-        +--+-------+                          |               ,-.
-           |                                  |              / \  `.  __..-,O
-           |                                  |             :   \ --''_..-'.'
-           v                                  |             |    . .-' `. '.
-                                              |             :     .     .`.'
-        +----------+                     +----+-----+        \     `.  /  ..
-        |          |                     |          |         \      `.   ' .
-        |  Redis   |                     |          | +------> `,       `.   \
-+-------+  Server  |                     |   CAM    |          ,|,`.       `-.\
-|       |          |                     |          |        '.||  ``-...__..-`
-|       +------+---+                     |          | <-----+  |  |
-|              |                         +----+--+--+          |__|
-|          ^   |                              ^  |             /||\
-|          |   v                              |  |            //||\\
-|          |                                  |  |           // || \\
-|       +--+--------+                         |  |       ___//__||__\\___
-|       |           | Requests for metadata   |  |       '--------------'
-|       | Katportal +-------------------------+  |               |
-|       | Client    |           metadata         |               |
-|       |           | <--------------------------+               |
-|       +-----------+                                            |
-|                                                                |
-|                                                                |
-+------------+-------------------------+                         |
-             |                         |                         |
-             |                         |                         |
-             v                         v                         |
-        +----+------+             +----+------+                  |
-        | Real-time |             | Target    |                  |
-        | Signal    |             | Selection |   raw voltage    |
-        | Detection | <-----------+ &         | <----------------+
-        | and Data  |             | Beam      |      stream
-        | Storage   |             | Forming   |
-        +-----------+             +-----------+
 
-
- To be added:
- +-------------+
- | Stream      |
- | Distributor |
- +-------------+
-```
+asdf
 
 ## Description of modules in above diagram:
 

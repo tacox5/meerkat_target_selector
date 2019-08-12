@@ -4,11 +4,15 @@ One of Breakthrough Listen’s primary objectives is to conduct the most compreh
 
 ![](diagram.png)
 
+![](block_diagram.png)
+
 ## Installation Instructions:
 
 ### Redis:
 
-[Install redis](https://redis.io/topics/quickstart)
+There are likely many ways to do this, but the simplest way to install Redis
+is the follow this [link](https://redis.io/topics/quickstart) to their
+homepage and follow their instructions for your particular distribution.
 
 ### Target Selector
 
