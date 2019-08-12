@@ -8,5 +8,5 @@ __pycache__
 
 config.yml
 
-# Example testing messages
-test/
+data/
+delay/delay_movies

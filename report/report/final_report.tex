@@ -1,0 +1,136 @@
+%% rnaastex.cls is the classfile used for Research Notes. It is derived
+%% from aastex61.cls with a few tweaks to allow for the unique format required.
+%% (10/15/17)
+%%\documentclass{rnaastex}
+
+%% Better is to use the "RNAAS" style option in AASTeX v6.2
+%% (01/08/18)
+\documentclass[onecolumn]{aastex62}
+\usepackage{lipsum}
+%% Define new commands here
+\newcommand\latex{La\TeX}
+
+%% Tells LaTeX to search for image files in the
+%% current directory as well as in the figures/ folder.
+\graphicspath{{./}{figures/}}
+
+\begin{document}
+
+\title{Target Selection and Figures of Merit Estimates for the Commensal SETI
+       Survey with MeerKAT}
+
+%% Note that the corresponding author command and emails has to come
+%% before everything else. Also place all the emails in the \email
+%% command instead of using multiple \email calls.
+%\correspondingauthor{Tyler Cox}
+%\email{greg.schwarz@aas.org, august.muench@aas.org}
+
+\author{Tyler Cox}
+\affiliation{School of Earth and Space Exploration, Arizona State University,
+             781 Terrace Mall, Tempe, AZ 85287, USA}
+
+\author{Daniel Czech}
+\affiliation{Department of Astronomy, University of California, Berkeley,
+             501 Campbell Hall \#3411, Berkeley, CA, 94720, USA}
+
+%% The \author command can take an optional ORCID.
+\author{David H. E. MacMahon}
+\affiliation{Department of Astronomy, University of California, Berkeley,
+             501 Campbell Hall \#3411, Berkeley, CA, 94720, USA}
+
+%% Note that RNAAS manuscripts DO NOT have abstracts.
+%% See the online documentation for the full list of available subject
+%% keywords and the rules for their use.
+\keywords{astrobiology ---
+technosignature --- SETI --- extraterrestrial intelligence}
+
+
+\begin{abstract}
+
+\input{sections/abstract.tex}
+
+\end{abstract}
+
+%% Start the main body of the article. If no sections in the
+%% research note leave the \section call blank to make the title.
+\section{Introduction}
+\lipsum
+
+% Explanation of the pipeline
+\section{Breakthrough Listen Backend}
+\lipsum
+
+% Target Selector?
+\section{Target Selector}
+\lipsum
+
+\subsection{Triaging}
+\lipsum
+\begin{figure*}[ht!]
+\plotone{source_field_dist.png}
+\caption{Relative figures of merit seti surveys\label{fig:f1}}
+\end{figure*}
+
+\begin{figure*}[ht!]
+\plotone{example_plot_n_beams.png}
+\caption{Relative figures of merit seti surveys\label{fig:f2}}
+\end{figure*}
+
+\begin{figure*}[ht!]
+\plotone{nbeams_needed.png}
+\caption{Relative figures of merit seti surveys\label{fig:f3}}
+\end{figure*}
+
+% Results - probably won't be any so change
+\section{Survey Figures of Merit}
+\lipsum
+
+\input{sections/fom.tex}
+
+\begin{figure*}[ht!]
+\plotone{figure_6_emilio_w_MeerKAT.png}
+\caption{Relative figures of merit seti surveys\label{fig:f4}}
+\end{figure*}
+
+\begin{figure*}[ht!]
+\plotone{figure_5_w_meerkat.png}
+\caption{Relative figures of merit seti surveys\label{fig:f5}}
+\end{figure*}
+
+\lipsum
+
+%% An example table using AASTeX's deluxetable. Note that since
+%% only one figure OR one table is allowed this is commented out.
+%\begin{deluxetable}{ccl}
+%\tablecaption{Example table some English and Greek letters\label{tab:1}}
+%\tablehead{
+%\colhead{Index number} & \colhead{English} & \colhead{Greek}
+%}
+%\startdata
+%1 & a & alpha ($\alpha$) \\
+%2 & b & beta ($\beta$) \\
+%3 & c & gamma ($\gamma$) \\
+%4 & d & delta ($\delta$) \\
+%5 & e & epsilon ($\epsilon$) \\
+%\enddata
+%\tablecomments{Long tables should only show a short example with the full
+%version as a machine readable table with the article.}
+%\end{deluxetable}
+
+%
+\section{Conclusions}
+asdf asdf asdf
+
+\section{Acknowledgements}
+Breakthrough Listen is managed by the Breakthrough Initiatives, sponsored by the Breakthrough Prize Foundation.
+
+
+%\begin{thebibliography}{}
+
+\bibliographystyle{aasjournal}
+\nocite{*}
+\bibliography{refs}
+
+%\end{thebibliography}
+
+\end{document}
