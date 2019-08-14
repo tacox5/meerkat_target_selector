@@ -10,7 +10,8 @@ requires = [
     "numpy==1.16.2",
     "credentials==1.1",
     "python_dateutil==2.8.0",
-    "PyYAML==5.1.2"
+    "PyYAML==5.1.2",
+    "mysqlclient==1.4.4"
 ]
 
 setuptools.setup(
