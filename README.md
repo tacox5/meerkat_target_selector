@@ -48,14 +48,6 @@ You can also specify a database name in which the tables will be stored which ca
 python target_selector_start.py
 ```
 
-## Next Steps:
-
-asdf
-
-## Questions:
-
-asdf
-
 ## References:
 
 1. Isaacson, Howard, et al. "The Breakthrough Listen search for intelligent life: Target selection of nearby stars and galaxies." https://arxiv.org/pdf/1701.06227.pdf
