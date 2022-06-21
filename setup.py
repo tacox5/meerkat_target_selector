@@ -7,7 +7,7 @@ requires = [
     "redis==2.10.6",
     "pandas==0.24.2",
     "slacker==0.9.65",
-    "numpy==1.16.2",
+    "numpy==1.22.0",
     "credentials==1.1",
     "python_dateutil==2.8.0",
     "PyYAML==5.4",
